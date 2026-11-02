@@ -401,6 +401,7 @@
     position: relative;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.4rem;
     flex: none;
   }
@@ -623,6 +624,14 @@
 
   .textgroesse-wrap {
     position: relative;
+  }
+
+  /* Zoom-/Audio-Gruppe im Header immer zentrieren (nicht nur auf
+     kleinen Bildschirmen) – margin-left:auto schiebt die Gruppe in die
+     Mitte zwischen dem linken Block (Menü/Set) und dem rechten Block
+     (Vollbild/Akku/Theme). */
+  #view-ansicht #textgroesse-wrap {
+    margin-left: auto;
   }
 
   #textgroesse-anzeige {
