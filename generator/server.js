@@ -58,6 +58,7 @@ const STANDARD_SET_ID = "Standard";
 const STANDARD_SET_NAME = "Set 1";
 const STANDARD_PORT = 8080;
 const MAX_BODY = 5 * 1024 * 1024; // 5 MB
+const SERVER_VERSION = "1.7.3";
 
 // --- Grundlegende Funktionen ---
 
@@ -459,13 +460,14 @@ function jsonAntwort(res, status, daten) {
   res.end(body);
 }
 
-function leseBody(req) {
+function leseBody(req, maxBytes) {
+  const limit = (typeof maxBytes === "number" && maxBytes > 0) ? maxBytes : MAX_BODY;
   return new Promise((resolve, reject) => {
     let lange = 0;
     const teile = [];
     req.on("data", (teil) => {
       lange += teil.length;
-      if (lange > MAX_BODY) {
+      if (lange > limit) {
         reject(new Error("Body zu groß"));
         req.destroy();
         return;
@@ -841,6 +843,102 @@ const server = http.createServer(async (req, res) => {
         textgroessen: Object.keys(gespeichert.textgroessen).length,
         autoscroll: Object.keys(gespeichert.autoscroll).length,
       });
+      return;
+    }
+
+    // --- Backup: alle Nutzerdaten als JSON (für ZIP-Export im Browser) ---
+    if (pfad === "/api/backup" && req.method === "GET") {
+      const index = liesSetsIndex();
+      const setsObj = listeSets();
+      const sets = [];
+      for (const [setId, setName] of Object.entries(setsObj)) {
+        const daten = liesSetDaten(setId, setName);
+        const ordner = setOrdner(setId);
+        const dateien = [];
+        if (fs.existsSync(ordner)) {
+          const mdFiles = fs.readdirSync(ordner).filter((f) => f.toLowerCase().endsWith(".md"));
+          for (const datei of mdFiles) {
+            const inhalt = fs.readFileSync(path.join(ordner, datei), "utf8");
+            dateien.push({ datei, inhalt });
+          }
+        }
+        sets.push({
+          id: setId,
+          name: (daten && daten.name) || setName,
+          reihenfolge: (daten && daten.reihenfolge) || [],
+          sichtbarkeit: (daten && daten.sichtbarkeit) || {},
+          dateien,
+        });
+      }
+      const audio = [];
+      if (fs.existsSync(AUDIO_ORDNER)) {
+        for (const f of fs.readdirSync(AUDIO_ORDNER)) {
+          if (/\.(mp3|wav)$/i.test(f)) {
+            const buf = fs.readFileSync(path.join(AUDIO_ORDNER, f));
+            audio.push({ datei: f, base64: buf.toString("base64") });
+          }
+        }
+      }
+      const backup = {
+        version: SERVER_VERSION,
+        erstellt: new Date().toISOString(),
+        setsIndex: index,
+        sets,
+        audio,
+        einstellungen: liesEinstellungen(),
+      };
+      const body = JSON.stringify(backup);
+      res.writeHead(200, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="text-prompter-backup.json"',
+        "Content-Length": Buffer.byteLength(body),
+      });
+      res.end(body);
+      return;
+    }
+
+    // --- Restore: Nutzerdaten aus einem Backup wiederherstellen ---
+    if (pfad === "/api/restore" && req.method === "POST") {
+      const body = await leseBody(req, 50 * 1024 * 1024);
+      if (!body || !Array.isArray(body.sets)) {
+        jsonAntwort(res, 400, { ok: false, fehler: "Ungültiges Backup." });
+        return;
+      }
+      // Sets-Index
+      if (body.setsIndex && body.setsIndex.aktivesSet) {
+        speichereSetsIndex({ aktivesSet: String(body.setsIndex.aktivesSet) });
+      }
+      // Sets + Dokumente
+      for (const set of body.sets) {
+        const setId = sicherSetId(set && set.id);
+        if (!setId) continue;
+        const ordner = setOrdner(setId);
+        fs.mkdirSync(ordner, { recursive: true });
+        for (const d of (set.dateien || [])) {
+          const ziel = sicheresDateiPfad(setId, d && d.datei);
+          if (ziel) fs.writeFileSync(ziel, String((d && d.inhalt) ?? ""), "utf8");
+        }
+        speichereSetDaten(setId, {
+          name: (set && set.name) || setId,
+          reihenfolge: set && set.reihenfolge,
+          sichtbarkeit: set && set.sichtbarkeit,
+        });
+      }
+      // Audio
+      if (Array.isArray(body.audio)) {
+        fs.mkdirSync(AUDIO_ORDNER, { recursive: true });
+        for (const a of body.audio) {
+          if (a && a.datei && a.base64) {
+            const safe = path.basename(String(a.datei));
+            fs.writeFileSync(path.join(AUDIO_ORDNER, safe), Buffer.from(a.base64, "base64"));
+          }
+        }
+      }
+      // Einstellungen
+      if (body.einstellungen && typeof body.einstellungen === "object" && !Array.isArray(body.einstellungen)) {
+        schreibeEinstellungen(body.einstellungen);
+      }
+      jsonAntwort(res, 200, { ok: true });
       return;
     }
 

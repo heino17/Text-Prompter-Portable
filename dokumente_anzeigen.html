@@ -1954,7 +1954,7 @@
           <button type="button" class="sprache-btn" data-sprache="en">English</button>
         </div>
       </div>
-      <div class="menu-fuss-version">&copy; 2026 <a target="_blank" rel="noopener" href="https://github.com/heino17">heino17</a> v1.7.2</div>
+      <div class="menu-fuss-version">&copy; 2026 <a target="_blank" rel="noopener" href="https://github.com/heino17">heino17</a> v1.7.3</div>
     </div>
   </nav>
 
@@ -2036,7 +2036,10 @@
       <div class="db-export-panel" id="db-export-panel" role="menu" aria-label="DB Export" hidden>
         <button class="db-export-option" id="db-export-option-alle" type="button" role="menuitem" title="dokumente_datenbank.js herunterladen" data-i18n="db-exportieren">DB exportieren</button>
         <button class="db-export-option" id="db-export-option-aktiv" type="button" role="menuitem" title="Nur das aktuelle Set als <Setname>_dokumente_datenbank.js herunterladen" data-i18n="db-exportieren-aktiv">Aktuelles Set als DB exportieren</button>
+        <button class="db-export-option" id="backup-export-btn" type="button" role="menuitem" data-i18n="backup-exportieren" data-i18n-title="backup-exportieren-titel">Daten sichern (Backup)</button>
+        <button class="db-export-option" id="backup-import-btn" type="button" role="menuitem" data-i18n="backup-importieren" data-i18n-title="backup-importieren-titel">Daten wiederherstellen</button>
       </div>
+      <input type="file" id="backup-file-input" accept=".zip,.json" style="display:none">
     </div>
   </header>
 
@@ -3324,6 +3327,9 @@ marked.setOptions({ breaks: true });
   const dbExportPanel = document.getElementById("db-export-panel");
   const dbOptionAlle = document.getElementById("db-export-option-alle");
   const dbOptionAktiv = document.getElementById("db-export-option-aktiv");
+  const backupExportBtn = document.getElementById("backup-export-btn");
+  const backupImportBtn = document.getElementById("backup-import-btn");
+  const backupFileInput = document.getElementById("backup-file-input");
   if (dbOptionAlle) dbOptionAlle.title = I18N.t(window.HttpModus ? "db-exportieren-titel-server" : "db-exportieren-titel-file");
   // Aktualisiert die Tooltips der Export-Buttons mit dem Namen des aktiven Sets,
   // z.B. "Alle 12 months later Dokumente als .zip herunterladen" bzw.
@@ -4330,6 +4336,94 @@ document.getElementById("ed-speichern").addEventListener("click", () => {
     zeigeToast(I18N.t("db-exportiert-set", { datei: dateiname }));
   }
 
+  // ===== Daten sichern / wiederherstellen (Backup) =====
+  // Sichert ALLE Nutzerdaten (Dokumente aller Sets, Audio, Einstellungen,
+  // Sets-Metadaten) als ZIP mit der ursprünglichen Ordnerstruktur.
+  async function datenSichern() {
+    if (!window.HttpModus) {
+      zeigeToast("Backup nur im Server-Modus verfügbar.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/backup");
+      if (!res.ok) throw new Error("backup fetch failed");
+      const backup = await res.json();
+      const zip = new JSZip();
+      (backup.sets || []).forEach(function (set) {
+        const ordner = (set.id === "Standard") ? "dokumente" : ("dokumente/" + set.id);
+        (set.dateien || []).forEach(function (d) {
+          zip.file(ordner + "/" + d.datei, d.inhalt || "");
+        });
+        zip.file("generator/sets/" + set.id + ".json",
+          JSON.stringify({ name: set.name, reihenfolge: set.reihenfolge || [], sichtbarkeit: set.sichtbarkeit || {} }, null, 2));
+      });
+      zip.file("generator/sets.json", JSON.stringify(backup.setsIndex || { aktivesSet: "Standard" }, null, 2));
+      if (backup.einstellungen) {
+        const inhalt = "// Automatisch generiert von server.js (Viewer-Einstellungen).\\n" +
+          "// Textgrößen (%) und Auto-Scroll-Geschwindigkeit (px/s) pro Dokument, pro Set.\\n" +
+          "// Nicht von Hand bearbeiten – wird vom Text Prompter überschrieben.\\n" +
+          "var EINSTELLUNGEN_DOKUMENTE = " + JSON.stringify(backup.einstellungen, null, 2) + ";\\n";
+        zip.file("generator/einstellungen_dokumente.js", inhalt);
+      }
+      (backup.audio || []).forEach(function (a) {
+        if (a && a.datei && a.base64) {
+          zip.file("verlinkte_audiodateien/" + a.datei, a.base64, { base64: true });
+        }
+      });
+      zip.file("backup.json", JSON.stringify(backup));
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const datum = new Date().toISOString().slice(0, 10);
+      a.download = "text-prompter-backup-" + datum + ".zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      zeigeToast(I18N.t("backup-erfolg", { datei: a.download }));
+    } catch (e) {
+      zeigeToast(I18N.t("backup-import-fehler", { fehler: String(e && e.message) }));
+    }
+  }
+
+  async function datenWiederherstellen(datei) {
+    if (!window.HttpModus) {
+      zeigeToast("Wiederherstellung nur im Server-Modus verfügbar.");
+      return;
+    }
+    if (!datei) return;
+    const bestaetigung = I18N.t("backup-import-bestätigung");
+    if (!window.confirm(bestaetigung)) return;
+    try {
+      let backup = null;
+      if (datei.name.toLowerCase().endsWith(".zip")) {
+        const zip = await JSZip.loadAsync(datei);
+        const eintrag = zip.file("backup.json");
+        if (!eintrag) throw new Error("backup.json fehlt im ZIP");
+        const text = await eintrag.async("string");
+        backup = JSON.parse(text);
+      } else {
+        const text = await datei.text();
+        backup = JSON.parse(text);
+      }
+      const res = await fetch("/api/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(backup)
+      });
+      const data = await res.json();
+      if (data && data.ok) {
+        zeigeToast(I18N.t("backup-import-erfolg"));
+        setTimeout(function () { location.reload(); }, 1200);
+      } else {
+        throw new Error((data && data.fehler) || "unbekannt");
+      }
+    } catch (e) {
+      zeigeToast(I18N.t("backup-import-fehler", { fehler: String(e && e.message) }));
+    }
+  }
+
   // --- Toast ---
   function zeigeToast(text) {
     const toast = document.createElement("div");
@@ -4381,6 +4475,13 @@ document.getElementById("ed-speichern").addEventListener("click", () => {
   btnDbExportieren.addEventListener("click", () => zeigeDbExportPanel(dbExportPanel.hidden));
   if (dbOptionAlle) dbOptionAlle.addEventListener("click", () => { exportiereDatenbank(); zeigeDbExportPanel(false); });
   if (dbOptionAktiv) dbOptionAktiv.addEventListener("click", () => { exportiereAktivesSet(); zeigeDbExportPanel(false); });
+  if (backupExportBtn) backupExportBtn.addEventListener("click", () => { datenSichern(); zeigeDbExportPanel(false); });
+  if (backupImportBtn) backupImportBtn.addEventListener("click", () => { if (backupFileInput) backupFileInput.click(); zeigeDbExportPanel(false); });
+  if (backupFileInput) backupFileInput.addEventListener("change", (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    if (f) datenWiederherstellen(f);
+    ev.target.value = "";
+  });
   document.addEventListener("click", (ev) => {
     if (dbExportPanel.hidden) return;
     const ziel = ev.target;
