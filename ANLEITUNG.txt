@@ -1,0 +1,56 @@
+============================================
+  TEXT PROMPTER - Portable Version (Windows + Linux)
+============================================
+
+Für ANWENDER:
+
+Node.js ist NICHT nötig - alles ist schon dabei.
+
+ Anwender: doppelklickst du "Windows-start.bat"
+  - Ein schwarzes Fenster öffnet sich kurz
+  - Dein Browser öffnet automatisch:  http://localhost:8080
+  - Fertig! Die Dokumente erscheinen.
+
+ Anwender: Doppelklick auf "Linux-start.sh"
+  - Terminal öffnet sich, der Browser öffnet automatisch:
+    http://localhost:8080
+  - Tipp: ggf. erst  "chmod +x Linux-start.sh"  einmalig ausführen.
+
+Zum Beenden:
+  - Browser-Fenster schließen
+  - Das schwarze Fenster / Terminal schließen (oder dort Strg+C)
+
+WICHTIG fürs Speichern:
+  - Das schwarze Fenster / Terminal muss am Laufen bleiben,
+    solange du die App benutzt.
+
+--------------------------------------------
+Für den GEBER (einmalig zusammenstellen):
+--------------------------------------------
+
+Diese Dateien gehören zusammen und müssen alle im GLEICHEN
+Ordner liegen (ist bereits erledigt):
+
+  Text_Prompter_Portable/
+  ├── Windows-start.bat      <-- Windows: doppelklicken
+  ├── Linux-start.sh         <-- Linux:   doppelklicken/starten
+  ├── index.html
+  ├── dokumente_anzeigen.html
+  ├── dokumente/             <-- enthaltene .md-Dateien
+  ├── generator/             <-- Server & Bibliotheken (server.js, marked.js usw.)
+  └── node/
+      ├── win/               <-- portables Node für Windows (nur die nötigen Binaries)
+      │     ├── node32.exe   <-- für Windows 32-Bit (x86)  [wird automatisch gewählt]
+      │     └── node64.exe   <-- für Windows 64-Bit (x64)  [wird automatisch gewählt]
+      └── linux/             <-- portables Node für Linux (nur das nötige Binary: bin/node)
+
+Welches Windows-Node eingesetzt wird, erkennt Windows-start.bat selbstständig
+anhand der System-Architektur (32-Bit -> node32.exe, 64-Bit -> node64.exe).
+Beide Dateien einfach im Paket belassen - es funktioniert auf jedem Rechner.
+
+Weitergeben: Den gesamten Ordner z. B. als ZIP verschicken.
+
+HINWEIS (Fehler "Port 8080 belegt"):
+Falls beim Start eine Fehlermeldung mit "EADDRINUSE" erscheint,
+läuft der Server schon einmal. Einfach das andere Fenster/Terminal
+schließen und erneut starten.

@@ -1,0 +1,15 @@
+{
+  "name": "Standard-Set",
+  "reihenfolge": [
+    "Osterspaziergang.md",
+    "Der Zauberlehrling.md",
+    "Erlkönig.md",
+    "Text Prompter.md"
+  ],
+  "sichtbarkeit": {
+    "Osterspaziergang.md": true,
+    "Der Zauberlehrling.md": true,
+    "Erlkönig.md": true,
+    "Text Prompter.md": true
+  }
+}

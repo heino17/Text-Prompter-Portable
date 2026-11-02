@@ -1,0 +1,13 @@
+{
+  "name": "Set-Liste 1",
+  "reihenfolge": [
+    "Songtext 1.md",
+    "Songtext 2.md",
+    "Songtext 3.md"
+  ],
+  "sichtbarkeit": {
+    "Songtext 1.md": true,
+    "Songtext 2.md": true,
+    "Songtext 3.md": true
+  }
+}

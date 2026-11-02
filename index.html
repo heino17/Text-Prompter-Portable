@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="generator/favicon-12ML-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="generator/favicon-12ML-96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="generator/favicon-12ML-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="generator/favicon-12ML-180.png">
+<script src="generator/i18n.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () { I18N.init(); });
+</script>
+<title>Text Prompter portable – Start</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-alt: #f4f4f5;
+    --bg-hover: #e8e8e8;
+    --bg-active: #d8d8d8;
+    --text: #1a1a1a;
+    --text-muted: #5a5a5a;
+    --border: #d8d8d8;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-text: #ffffff;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --success: #16a34a;
+    --code-bg: #eeeeee;
+    --quote-border: #c7c7c7;
+    --header-grund: linear-gradient(180deg, #ffffff 0%, #f0f0f2 100%);
+    --header-schraffur: repeating-linear-gradient(115deg,  rgba(0,0,0,0.03) 0 1px, transparent 1px 12px),
+                         repeating-linear-gradient(68deg,   rgba(0,0,0,0.02) 0 1px, transparent 1px 18px),
+                         repeating-linear-gradient(-58deg,  rgba(0,0,0,0.025) 0 1px, transparent 1px 26px),
+                         repeating-linear-gradient(157deg,  rgba(0,0,0,0.015) 0 1px, transparent 1px 38px);
+    --header-innenlicht: inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                          inset 0 -1px 0 rgba(0, 0, 0, 0.07);
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #121212;
+    --bg-alt: #1c1c1e;
+    --bg-hover: #2c2c2e;
+    --bg-active: #3a3a3c;
+    --text: #f0f0f0;
+    --text-muted: #a0a0a0;
+    --border: #606060;
+    --accent: #4d8dff;
+    --accent-hover: #3d7de6;
+    --accent-text: #0a0a0a;
+    --danger: #ff453a;
+    --danger-hover: #e63e33;
+    --success: #30d158;
+    --code-bg: #262626;
+    --quote-border: #444444;
+    --header-grund: linear-gradient(180deg, #232326 0%, #1a1a1c 100%);
+    --header-schraffur: repeating-linear-gradient(115deg,  rgba(255,255,255,0.04) 0 1px, transparent 1px 12px),
+                         repeating-linear-gradient(68deg,   rgba(255,255,255,0.025) 0 1px, transparent 1px 18px),
+                         repeating-linear-gradient(-58deg,  rgba(255,255,255,0.035) 0 1px, transparent 1px 26px),
+                         repeating-linear-gradient(157deg,  rgba(255,255,255,0.02) 0 1px, transparent 1px 38px);
+    --header-innenlicht: inset 0 1px 0 rgba(255, 255, 255, 0.14),
+                          inset 0 -1px 0 rgba(0, 0, 0, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.2s ease, color 0.2s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    position: relative;
+    overflow: hidden;
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: var(--header-grund);
+    border-bottom: 1px solid var(--border);
+  }
+  header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--header-schraffur);
+    pointer-events: none;
+  }
+  .header-inhalt {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .titelzeile h1 {
+    margin: 0;
+    font-size: 1.3rem;
+    letter-spacing: 0.02em;
+  }
+  .titelzeile p {
+    margin: 2px 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .kopf-aktionen { display: flex; align-items: center; gap: 8px; }
+  .sprache-btn, #theme-toggle {
+    border: 1px solid var(--border);
+    background: var(--bg-alt);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .sprache-btn:hover, #theme-toggle:hover { background: var(--bg-hover); }
+  .sprache-btn.aktiv { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+  main {
+    flex: 1;
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    overflow-y: auto;
+  }
+
+  .ueberleitung {
+    max-width: 760px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .karten {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 18px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .karte {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-alt);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  }
+  .karte:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.10); }
+
+  .karte.hervor { border-top: 4px solid var(--success); }
+  .karte.windows { border-top: 4px solid var(--accent); }
+  .karte.linux { border-top: 4px solid var(--danger); }
+
+  .karte .ikone { font-size: 1.8rem; }
+  .karte h2 { margin: 0 0 2px; font-size: 1.05rem; }
+  .karte .beschreibung { margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; flex: 1; }
+
+  .karte .karte-merkzettel {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text);
+    background: var(--code-bg);
+    border-left: 3px solid var(--success);
+    border-radius: 8px;
+    padding: 9px 12px;
+  }
+
+  .karte .code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 10px 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border: 1px solid var(--border);
+  }
+
+  .knopf {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--accent);
+    color: var(--accent-text);
+    transition: background 0.15s ease;
+  }
+  .knopf:hover { background: var(--accent-hover); }
+
+  .hinweis {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 760px;
+    line-height: 1.5;
+  }
+  .hinweis code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 5px;
+  }
+
+  .fuss {
+    padding: 14px 22px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  /* Modal für Server-Start-Hinweis */
+  .modal-dunst {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+  .modal-dunst.offen { display: flex; }
+  .modal {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .modal h3 { margin: 0; font-size: 1.05rem; }
+  .modal p { margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+  .modal .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8rem; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; word-break: break-all; }
+  .modal .aktionen { display: flex; justify-content: flex-end; gap: 10px; }
+  .modal .knopf { width: auto; }
+  .modal .knopf.leise { background: var(--bg-alt); color: var(--text); border: 1px solid var(--border); }
+  .modal .knopf.leise:hover { background: var(--bg-hover); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inhalt">
+    <div class="titelzeile">
+      <h1>🚀 Text Prompter – Start</h1>
+      <p data-i18n="ansicht-titel">Dokumente anzeigen</p>
+    </div>
+    <div class="kopf-aktionen">
+      <button type="button" class="sprache-btn" data-sprache="de">DE</button>
+      <button type="button" class="sprache-btn" data-sprache="en">EN</button>
+      <button type="button" id="theme-toggle" title="Helles/Dunkles Design umschalten" data-i18n="design-umschalten" data-i18n-no-text="1" data-i18n-title="design-umschalten">🌙</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="ueberleitung" data-i18n-html="1" data-i18n="index-start-text">Wähle, wie du den Text Prompter öffnen möchtest.</div>
+
+  <div class="karten">
+    <section class="karte hervor">
+      <div class="ikone">📄</div>
+      <h2 data-i18n="index-karte-doku-titel">Dokumente anzeigen</h2>
+      <p class="beschreibung" data-i18n="index-karte-doku-text">Öffnet die Dokumenten-Ansicht direkt. Funktioniert ohne Server, auch über file:// – braucht nur einen Browser.</p>
+      <p class="karte-merkzettel" data-i18n="index-karte-doku-merk">Tipp: In der Server-Variante (Windows/Linux links+rechts) ist der Umgang deutlich komfortabler – z. B. Speichern, Importieren und Löschen direkt im Ordner.</p>
+      <a class="knopf" href="dokumente_anzeigen.html" data-i18n="index-karte-doku-button">Jetzt öffnen</a>
+    </section>
+
+    <section class="karte windows">
+      <div class="ikone">🪟</div>
+      <h2 data-i18n="index-karte-win-titel">Windows-Server starten</h2>
+      <p class="beschreibung" data-i18n="index-karte-win-text">Startet den lokalen Node.js-Server, der die Dokumente auf http://localhost:8080 ausliefert. Bitte im Ordner per Doppelklick starten.</p>
+      <div class="code">Windows-start.bat</div>
+      <button type="button" class="knopf" data-ziel="windows" data-i18n="index-karte-win-button">Wie starten?</button>
+    </section>
+
+    <section class="karte linux">
+      <div class="ikone">🐧</div>
+      <h2 data-i18n="index-karte-lin-titel">Linux-Server starten</h2>
+      <p class="beschreibung" data-i18n="index-karte-lin-text">Startet den lokalen Node.js-Server, der die Dokumente auf http://localhost:8080 ausliefert. Bitte im Ordner per Doppelklick starten.</p>
+      <div class="code">Linux-start.sh</div>
+      <button type="button" class="knopf" data-ziel="linux" data-i18n="index-karte-lin-button">Wie starten?</button>
+    </section>
+  </div>
+
+  <div class="hinweis" data-i18n-html="1" data-i18n="index-hinweis">Tipp: Die beiden Server-Skripte lassen sich aus dem Browser aus Sicherheitsgründen nicht direkt per Klick starten – das macht man per Doppelklick im Dateimanager (Terminal startet dabei automatisch den Server und öffnet den Browser).</div>
+</main>
+
+<footer class="fuss">
+  <span data-i18n="index-fuss">Text Prompter</span>
+</footer>
+
+<div class="modal-dunst" id="modal-dunst">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="modal-titel"></h3>
+    <p id="modal-text"></p>
+    <div class="code" id="modal-code"></div>
+    <div class="aktionen">
+      <button type="button" class="knopf leise" id="modal-schliessen" data-i18n="schliessen">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Eigene Übersetzungen der Startseite (dezentral, damit das zentrale
+  // i18n.js für die App unangetastet bleibt).
+  var TEXTE = {
+    de: {
+      "index-start-text": "Wähle, wie du den Text Prompter öffnen möchtest. Immer verfügbar: die direkte Dokumenten-Ansicht.",
+      "index-karte-doku-titel": "Dokumente anzeigen",
+      "index-karte-doku-text": "Öffnet die Dokumenten-Ansicht direkt. Funktioniert ohne Server – auch als file:// in deinem Browser.",
+      "index-karte-doku-button": "Jetzt öffnen",
+      "index-karte-doku-merk": "Tipp: In der Server-Variante (Windows/Linux links+rechts) ist der Umgang deutlich komfortabler – z. B. Speichern, Importieren und Löschen direkt im Ordner.",
+      "index-karte-win-titel": "Windows-Server starten",
+      "index-karte-win-text": "Startet den lokalen Node.js-Server, der die Dokumente auf http://localhost:8080 ausliefert.",
+      "index-karte-win-button": "Wie starten?",
+      "index-karte-lin-titel": "Linux-Server starten",
+      "index-karte-lin-text": "Startet den lokalen Node.js-Server, der die Dokumente auf http://localhost:8080 ausliefert.",
+      "index-karte-lin-button": "Wie starten?",
+      "index-hinweis": "Tipp: Die beiden Server-Skripte lassen sich aus dem Browser aus Sicherheitsgründen nicht direkt per Klick starten – stattdessen doppelklickst du sie im Dateimanager. Das Terminal startet dann den Server und öffnet deinen Browser auf http://localhost:8080.",
+      "index-fuss": "Text Prompter portable · © 2026 https://github.com/heino17 · v1.7.1",
+      "modal-win-titel": "Windows-Server starten",
+      "modal-win-text": "Öffne den Projektordner und starte die Datei per Doppelklick:",
+      "modal-win-code": "Projektordner\n  └─ Windows-start.bat     ◄ Doppelklick\n\noder im Terminal (im Ordner):\n  Windows-start.bat",
+      "modal-lin-titel": "Linux-Server starten",
+      "modal-lin-text": "Öffne einen Terminal im Projektordner und mache die Datei startklar (einmalig) und starte sie:",
+      "modal-lin-code": "Projektordner\n  └─ Linux-start.sh        ◄ ausführbar machen\n\nchmod +x Linux-start.sh   # einmalig\n./Linux-start.sh"
+    },
+    en: {
+      "index-start-text": "Choose how to open the Text Prompter. Always available: the direct document view.",
+      "index-karte-doku-titel": "View documents",
+      "index-karte-doku-text": "Opens the document view directly. Works without a server – even as file:// in your browser.",
+      "index-karte-doku-button": "Open now",
+      "index-karte-doku-merk": "Tip: The server variant (Windows/Linux left+right) is much more convenient – e.g. saving, importing and deleting directly in the folder.",
+      "index-karte-win-titel": "Start Windows server",
+      "index-karte-win-text": "Starts the local Node.js server that serves the documents on http://localhost:8080.",
+      "index-karte-win-button": "How to start?",
+      "index-karte-lin-titel": "Start Linux server",
+      "index-karte-lin-text": "Starts the local Node.js server that serves the documents on http://localhost:8080.",
+      "index-karte-lin-button": "How to start?",
+      "index-hinweis": "Tip: For security reasons, browsers cannot start these server scripts with a single click – instead, double-click them in your file manager. The terminal then starts the server and opens your browser on http://localhost:8080.",
+      "index-fuss": "Text Prompter portable · © 2026 https://github.com/heino17 · v1.7.1",
+      "modal-win-titel": "Start Windows server",
+      "modal-win-text": "Open the project folder and start the file with a double-click:",
+      "modal-win-code": "Project folder\n  └─ Windows-start.bat     ◄ double-click\n\nor in the terminal (inside the folder):\n  Windows-start.bat",
+      "modal-lin-titel": "Start Linux server",
+      "modal-lin-text": "Open a terminal in the project folder, make the file executable (once), and start it:",
+      "modal-lin-code": "Project folder\n  └─ Linux-start.sh        ◄ make executable\n\nchmod +x Linux-start.sh   # once\n./Linux-start.sh"
+    }
+  };
+
+  function texte() { return TEXTE[I18N.getSprache()] || TEXTE.de; }
+
+  function wendeEigeneAn() {
+    var t = texte();
+    var el = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < el.length; i++) {
+      var e = el[i];
+      var k = e.getAttribute("data-i18n");
+      // Nur eigene Schlüssel überschreiben, nicht die aus i18n.js
+      if (t[k] !== undefined) {
+        if (e.getAttribute("data-i18n-html") === "1") e.innerHTML = t[k];
+        else e.textContent = t[k];
+      }
+    }
+  }
+
+  // Modal-Logik
+  var dunst = document.getElementById("modal-dunst");
+  var modalTitel = document.getElementById("modal-titel");
+  var modalText = document.getElementById("modal-text");
+  var modalCode = document.getElementById("modal-code");
+  var modalSchliessen = document.getElementById("modal-schliessen");
+
+  function zeigeModal(ziel) {
+    var t = texte();
+    var prefix = ziel === "windows" ? "modal-win-" : "modal-lin-";
+    modalTitel.textContent = t[prefix + "titel"];
+    modalText.textContent = t[prefix + "text"];
+    modalCode.textContent = t[prefix + "code"];
+    dunst.classList.add("offen");
+  }
+
+  modalSchliessen.addEventListener("click", function () { dunst.classList.remove("offen"); });
+  dunst.addEventListener("click", function (e) {
+    if (e.target === dunst) dunst.classList.remove("offen");
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") dunst.classList.remove("offen");
+  });
+
+  document.querySelectorAll("[data-ziel]").forEach(function (btn) {
+    btn.addEventListener("click", function () { zeigeModal(btn.getAttribute("data-ziel")); });
+  });
+
+  // ---- Hell-/Dunkelmodus (gemeinsam mit dokumente_anzeigen.html) ----
+  var themeToggle = document.getElementById("theme-toggle");
+  function leseThema() {
+    var t = null;
+    try { t = localStorage.getItem("dokumente_theme"); } catch (e) {}
+    if (t === "dark" || t === "light") return t;
+    return "dark";
+  }
+  function wendeThemaAn(thema) {
+    document.documentElement.setAttribute("data-theme", thema);
+    themeToggle.textContent = thema === "dark" ? "☀️" : "🌙";
+    try { localStorage.setItem("dokumente_theme", thema); } catch (e) {}
+  }
+  themeToggle.addEventListener("click", function () {
+    var aktuell = document.documentElement.getAttribute("data-theme") || "light";
+    wendeThemaAn(aktuell === "dark" ? "light" : "dark");
+  });
+  wendeThemaAn(leseThema());
+
+  // Nach I18N.init() die eigenen Texte anwenden (init läuft im DOMContentLoaded
+  // vor <body>-Ende; wir hängen uns ans Ende derselben Aufgabe).
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", wendeEigeneAn);
+  } else {
+    wendeEigeneAn();
+  }
+})();
+</script>
+</body>
+</html>
