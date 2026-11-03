@@ -12,8 +12,10 @@ echo.
 REM Architektur erkennen und passendes Windows-Node wählen
 if "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
     set "NODE_EXE=node\win\node64.exe"
+    set "NODE_OPTS=--max-old-space-size=1024"
 ) else (
     set "NODE_EXE=node\win\node32.exe"
+    set "NODE_OPTS=--max-old-space-size=512"
 )
 
 REM Prüfen, ob das portable Windows-Node vorhanden ist
@@ -41,7 +43,7 @@ REM Browser erst nach kurzer Pause öffnen (wenn der Server steht)
 start "" cmd /c "timeout /t 2 /nobreak >nul & start %START_URL%"
 
 REM Server starten; Fenster bei Fehler offen halten
-"%NODE_EXE%" generator\server.js
+"%NODE_EXE%" %NODE_OPTS% generator\server.js
 set "CODE=%ERRORLEVEL%"
 
 if not "%CODE%"=="0" (

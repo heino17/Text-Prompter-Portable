@@ -34,7 +34,7 @@ echo
 ) &
 
 # Server starten
-"$NODE_BIN" generator/server.js
+"$NODE_BIN" --max-old-space-size=512 generator/server.js
 CODE=$?
 
 if [ "$CODE" -ne 0 ]; then

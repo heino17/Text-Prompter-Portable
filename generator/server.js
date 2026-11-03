@@ -58,7 +58,7 @@ const STANDARD_SET_ID = "Standard";
 const STANDARD_SET_NAME = "Set 1";
 const STANDARD_PORT = 8080;
 const MAX_BODY = 5 * 1024 * 1024; // 5 MB
-const SERVER_VERSION = "1.7.3";
+const SERVER_VERSION = "1.7.4";
 
 // --- Grundlegende Funktionen ---
 
@@ -847,53 +847,50 @@ const server = http.createServer(async (req, res) => {
     }
 
     // --- Backup: alle Nutzerdaten als JSON (für ZIP-Export im Browser) ---
+    // Gestreamt, um den Speicherverbrauch auf Tablets/kleinen Geräten gering
+    // zu halten (kein riesiges Zwischen-JSON im RAM).
     if (pfad === "/api/backup" && req.method === "GET") {
       const index = liesSetsIndex();
+      res.writeHead(200, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="text-prompter-backup.json"',
+      });
+      res.write('{"version":' + JSON.stringify(SERVER_VERSION) +
+        ',"erstellt":' + JSON.stringify(new Date().toISOString()) +
+        ',"setsIndex":' + JSON.stringify(index) + ',"sets":[');
       const setsObj = listeSets();
-      const sets = [];
-      for (const [setId, setName] of Object.entries(setsObj)) {
-        const daten = liesSetDaten(setId, setName);
+      const setIds = Object.keys(setsObj);
+      setIds.forEach((setId, i) => {
+        const daten = liesSetDaten(setId, setsObj[setId]);
         const ordner = setOrdner(setId);
         const dateien = [];
         if (fs.existsSync(ordner)) {
           const mdFiles = fs.readdirSync(ordner).filter((f) => f.toLowerCase().endsWith(".md"));
           for (const datei of mdFiles) {
-            const inhalt = fs.readFileSync(path.join(ordner, datei), "utf8");
-            dateien.push({ datei, inhalt });
+            dateien.push({ datei, inhalt: fs.readFileSync(path.join(ordner, datei), "utf8") });
           }
         }
-        sets.push({
+        const setObj = {
           id: setId,
-          name: (daten && daten.name) || setName,
+          name: (daten && daten.name) || setsObj[setId],
           reihenfolge: (daten && daten.reihenfolge) || [],
           sichtbarkeit: (daten && daten.sichtbarkeit) || {},
           dateien,
+        };
+        if (i > 0) res.write(",");
+        res.write(JSON.stringify(setObj));
+      });
+      res.write('],"audio":[');
+      if (fs.existsSync(AUDIO_ORDNER)) {
+        const audioFiles = fs.readdirSync(AUDIO_ORDNER).filter((f) => /\.(mp3|wav)$/i.test(f));
+        audioFiles.forEach((f, i) => {
+          if (i > 0) res.write(",");
+          const buf = fs.readFileSync(path.join(AUDIO_ORDNER, f));
+          res.write(JSON.stringify({ datei: f, base64: buf.toString("base64") }));
         });
       }
-      const audio = [];
-      if (fs.existsSync(AUDIO_ORDNER)) {
-        for (const f of fs.readdirSync(AUDIO_ORDNER)) {
-          if (/\.(mp3|wav)$/i.test(f)) {
-            const buf = fs.readFileSync(path.join(AUDIO_ORDNER, f));
-            audio.push({ datei: f, base64: buf.toString("base64") });
-          }
-        }
-      }
-      const backup = {
-        version: SERVER_VERSION,
-        erstellt: new Date().toISOString(),
-        setsIndex: index,
-        sets,
-        audio,
-        einstellungen: liesEinstellungen(),
-      };
-      const body = JSON.stringify(backup);
-      res.writeHead(200, {
-        "Content-Type": "application/json; charset=utf-8",
-        "Content-Disposition": 'attachment; filename="text-prompter-backup.json"',
-        "Content-Length": Buffer.byteLength(body),
-      });
-      res.end(body);
+      res.write('],"einstellungen":' + JSON.stringify(liesEinstellungen()) + "}");
+      res.end();
       return;
     }
 
