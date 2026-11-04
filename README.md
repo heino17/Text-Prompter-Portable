@@ -184,6 +184,13 @@ Text_Prompter_Arbeits_Ordner/
     "Aktuelles Set exportieren" lädt nur das aktive Set als
     `<Setname>_dokumente_datenbank.js` herunter
     (z.B. `12_months_later_dokumente_datenbank.js`, `Tom_s_Band_dokumente_datenbank.js`)
+  - **"Daten sichern / wiederherstellen"** (im "DB Export"-Dropdown):
+    - "Daten sichern (Backup)" erzeugt ein ZIP mit **allen** Nutzerdaten
+      (Dokumente aller Sets, Audio, Einstellungen, Set-Metadaten) plus
+      `backup.json` – für Archiv, Weitergabe oder Wiederherstellung.
+    - "Daten wiederherstellen" spielt ein Backup-ZIP wieder ein; Audiodateien
+      bleiben dabei unberührt (können bei Bedarf manuell aus dem ZIP
+      in `verlinkte_audiodateien/` kopiert werden).
 - **".md importieren"** – eine oder mehrere `.md`-Dateien einlesen
   (Titel wird aus der ersten `# Überschrift` ermittelt, sonst aus dem Dateinamen)
 
@@ -238,6 +245,10 @@ Die App erkennt den Servernodus automatisch (sobald sie über
   `set`/`setName` ausgezeichnet)
 - `POST /api/db-export-set` → liefert das aktive Set als Download
   (`{ "dateiname": "<Setname>_dokumente_datenbank.js", "inhalt": "…" }`)
+- `GET  /api/backup` → liefert **alle** Nutzerdaten als JSON (Dokumente aller
+  Sets, Audio als Base64, Einstellungen, Set-Metadaten) – für Backup/ZIP-Export
+- `POST /api/restore` → stellt Nutzerdaten aus einem Backup wieder her
+  (Body: Backup-JSON; Audiodateien werden dabei ignoriert)
 
 ## Portable Weitergabe an andere
 
@@ -278,7 +289,7 @@ verschicken.
 
 ---
 
-*Zuletzt aktualisiert: 11.09.2026*
+*Zuletzt aktualisiert: 04.11.2026*
 
 ---
 
@@ -466,6 +477,13 @@ Text_Prompter_Arbeits_Ordner/
     "Export current set" downloads only the active set as
     `<Setname>_dokumente_datenbank.js`
     (e.g. `12_months_later_dokumente_datenbank.js`, `Tom_s_Band_dokumente_datenbank.js`)
+  - **"Back up / Restore data"** (in the "DB Export" dropdown):
+    - "Back up data" creates a ZIP with **all** user data
+      (documents of all sets, audio, settings, set metadata) plus
+      `backup.json` – for archiving, sharing or restoring.
+    - "Restore data" restores a backup ZIP; audio files are left untouched
+      (can be copied manually from the ZIP into `verlinkte_audiodateien/`
+      if needed).
 - **"Import .md"** – read one or more `.md` files
   (title is taken from the first `# heading`, otherwise from the file name)
 
@@ -518,6 +536,10 @@ The app detects server mode automatically (as soon as it is loaded via
   with `set`/`setName`)
 - `POST /api/db-export-set` → serves the active set as download
   (`{ "dateiname": "<Setname>_dokumente_datenbank.js", "inhalt": "…" }`)
+- `GET  /api/backup` → serves **all** user data as JSON (documents of all sets,
+  audio as base64, settings, set metadata) – for backup/ZIP export
+- `POST /api/restore` → restores user data from a backup
+  (body: backup JSON; audio files are ignored)
 
 ## Portable distribution to others
 
@@ -557,4 +579,4 @@ remove the unnecessary files (`npm`/`npx`/`corepack`, `node_modules/`,
 
 ---
 
-*Last updated: 11.09.2026*
+*Last updated: 04.11.2026*
