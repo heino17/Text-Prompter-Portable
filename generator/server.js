@@ -58,7 +58,7 @@ const STANDARD_SET_ID = "Standard";
 const STANDARD_SET_NAME = "Set 1";
 const STANDARD_PORT = 8080;
 const MAX_BODY = 5 * 1024 * 1024; // 5 MB
-const SERVER_VERSION = "1.7.5";
+const SERVER_VERSION = "1.7.6";
 
 // --- Grundlegende Funktionen ---
 

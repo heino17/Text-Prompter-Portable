@@ -1954,7 +1954,7 @@
           <button type="button" class="sprache-btn" data-sprache="en">English</button>
         </div>
       </div>
-      <div class="menu-fuss-version">&copy; 2026 <a target="_blank" rel="noopener" href="https://github.com/heino17">heino17</a> v1.7.5</div>
+      <div class="menu-fuss-version">&copy; 2026 <a target="_blank" rel="noopener" href="https://github.com/heino17">heino17</a> v1.7.6</div>
     </div>
   </nav>
 
@@ -4407,10 +4407,15 @@ document.getElementById("ed-speichern").addEventListener("click", () => {
         const text = await datei.text();
         backup = JSON.parse(text);
       }
+      // Audiodateien werden beim Wiederherstellen bewusst ignoriert:
+      // sie sind im Backup-ZIP enthalten und können bei Bedarf per Hand
+      // in verlinkte_audiodateien/ kopiert werden. So bleibt die Anfrage
+      // klein und zuverlässig (auch bei großen Audio-Bibliotheken).
+      const backupOhneAudio = Object.assign({}, backup, { audio: [] });
       const res = await fetch("/api/restore", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(backup)
+        body: JSON.stringify(backupOhneAudio)
       });
       const data = await res.json();
       if (data && data.ok) {
