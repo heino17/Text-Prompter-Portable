@@ -54,3 +54,25 @@ HINWEIS (Fehler "Port 8080 belegt"):
 Falls beim Start eine Fehlermeldung mit "EADDRINUSE" erscheint,
 läuft der Server schon einmal. Einfach das andere Fenster/Terminal
 schließen und erneut starten.
+
+--------------------------------------------
+FEHLERSUCHE / TROUBLESHOOTING
+--------------------------------------------
+
+Linux: "Doppelklick auf Linux-start.sh macht nichts"
+  - Linux führt .sh-Dateien beim Doppelklick meist NICHT aus.
+  - Im Terminal ausführen:
+      chmod +x Linux-start.sh node/linux/bin/node
+      ./Linux-start.sh
+  - Falls der Browser nicht automatisch öffnet: manuell
+    http://localhost:8080/dokumente_anzeigen.html aufrufen.
+
+Windows (Tablet, 32-Bit): Browser meldet "Kontakt zum Browser verloren"
+  - Der Server läuft weiter; Seite einfach neu laden (F5).
+  - Auf Tablets mit wenig RAM kann der Browser-Renderer unter Last
+    (z. B. großer Editor oder Backup) neu starten. Tipp:
+      - Nur das nötige Set öffnen, nicht alle Dokumente auf einmal.
+      - Backups auf dem Desktop-PC erstellen, nicht auf dem Tablet.
+  - Falls der Server abstürzt (Heap-Fehler): in Windows-start.bat den
+    Wert --max-old-space-size=512 (32-Bit) auf 768 erhöhen
+    (nur bei mind. 2 GB freiem RAM).

@@ -11,10 +11,15 @@ echo
 
 NODE_BIN="node/linux/bin/node"
 
+# Ausführbarkeit sicherstellen (nach USB-Transfer oft verloren)
+chmod +x "$NODE_BIN" 2>/dev/null
+
 if [ ! -x "$NODE_BIN" ]; then
-  echo "[FEHLER] Das portable Linux-Node wurde nicht gefunden:"
+  echo "[FEHLER] Das portable Linux-Node wurde nicht gefunden oder ist nicht ausführbar:"
   echo "  $NODE_BIN"
-  echo "Bitte das Node-Linux-ZIP unter node/linux/ auspacken."
+  echo "Bitte im Terminal ausführen:"
+  echo "  chmod +x Linux-start.sh node/linux/bin/node"
+  echo "  ./Linux-start.sh"
   echo "Abbruch."
   exit 1
 fi
